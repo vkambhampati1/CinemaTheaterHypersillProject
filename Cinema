@@ -1,0 +1,172 @@
+import java.text.DecimalFormat;
+import java.util.Scanner;
+
+public class Cinema {
+    private static int normalPrice = 10;
+    private static int reducedPrice = 8;
+    private static int bookedSeats;
+    private static int rows;
+    private static int seats;
+
+   public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        int input = -1;  // Initialize input to a value that doesn't match any case
+
+        System.out.println("Enter the number of rows:");
+        rows = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.println("Enter the number of seats in each row:");
+        seats = scanner.nextInt();
+        scanner.nextLine();
+
+        String[][] cinema = new String[rows][seats];
+        int totalSeats = totalSeats();
+        loadCinema(cinema);
+
+        while (input != 0) {
+            System.out.println("1. Show the seats\n2. Buy a ticket\n3. Statistics\n0. Exit");
+            input = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (input) {
+                case 1:
+                    printCinema(cinema);
+                    System.out.println();
+                    break;
+                case 2:
+                    buyTicket(cinema, totalSeats, scanner);
+                    System.out.println();
+                    break;
+
+                case 3:
+                    showStatistics(cinema, totalSeats);
+                    System.out.println();
+                    break;
+                case 0:
+                    System.out.println("Exiting...");
+                    break;
+                default:
+                    System.out.println("Invalid input. Please enter 0, 1, 2, or 3.");
+                    System.out.println();
+                    break;
+            }
+        }
+    }
+
+    static int totalSeats() {
+        return rows * seats;
+    }
+
+    static void loadCinema(String[][] cinema) {
+        for (int i = 0; i < cinema.length; i++) {
+            for (int j = 0; j < cinema[i].length; j++) {
+                cinema[i][j] = "S";
+            }
+        }
+    }
+
+    static void printCinema(String[][] cinema) {
+        System.out.println();
+        System.out.println("Cinema:");
+        System.out.print("  ");
+        for (int j = 1; j <= cinema[0].length; j++) {
+            System.out.print(j + " ");
+        }
+        System.out.println();
+        for (int i = 0; i < cinema.length; i++) {
+            System.out.print(i + 1 + " ");
+            for (int j = 0; j < cinema[i].length; j++) {
+                System.out.print(cinema[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    static void buyTicket(String[][] cinema, int totalSeats, Scanner scanner) {
+        while (true) {
+            System.out.println("Enter a row number:");
+            int rNum = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+            System.out.println("Enter a seat number in that row:");
+            int sNum = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            if (rNum < 1 || rNum > rows || sNum < 1 || sNum > seats) {
+                System.out.println("Wrong input!");
+            }
+            else if (cinema[rNum - 1][sNum - 1].equals("B")) {
+                System.out.println("That ticket has already been purchased!");
+            }
+            else {
+                int price = calculateTicketPrice(rNum, totalSeats);
+                System.out.println("Ticket price: $" + price);
+                cinema[rNum - 1][sNum - 1] = "B";
+                bookedSeats++;
+                break; // Break out of the loop once a valid ticket is purchased
+            }
+        }
+    }
+
+    static void showStatistics(String[][] cinema, int totalSeats) {
+        int bookedSeatsCount = calculateBookedSeats(cinema);
+        System.out.println(bookedSeatsCount);
+        System.out.println(totalSeats);
+        float percentage = ((float) bookedSeatsCount / totalSeats) * 100.0f;
+        DecimalFormat df = new DecimalFormat("0.00%"); // Modified format pattern
+
+        System.out.println("Number of purchased tickets: " + bookedSeatsCount);
+        System.out.printf("Percentage: %.2f%%%n", percentage);// Use formatted percentage value
+
+        int currentIncome = calculateCurrentIncome(cinema, totalSeats); // Update here
+        System.out.println("Current income: $" + currentIncome);
+
+        System.out.println("Total income: $" + calculateTotalIncome(totalSeats));
+    }
+
+
+    static int calculateTicketPrice(int rNum, int totalSeats) {
+        if (totalSeats <= 60 || rows <= 5) {
+            return normalPrice;
+        }
+        else {
+            return rNum <= rows / 2 ? normalPrice : reducedPrice;
+        }
+    }
+
+    static int calculateBookedSeats(String[][] cinema) {
+        int bookedSeatsCount = 0;
+        for (int i = 0; i < cinema.length; i++) {
+            for (int j = 0; j < cinema[i].length; j++) {
+                if (cinema[i][j].equals("B")) {
+                    bookedSeatsCount++;
+                }
+            }
+        }
+        return bookedSeatsCount;
+    }
+
+    static int calculateCurrentIncome(String[][] cinema, int totalSeats) {
+        int currentIncome = 0;
+        for (int i = 0; i < cinema.length; i++) {
+            for (int j = 0; j < cinema[i].length; j++) {
+                if (cinema[i][j].equals("B")) {
+                    currentIncome += calculateTicketPrice(i + 1,
+                                                          totalSeats); // Update totalSeats here
+                }
+            }
+        }
+        return currentIncome;
+    }
+
+    static int calculateTotalIncome(int totalSeats) {
+        if (totalSeats <= 60) {
+            return totalSeats * normalPrice;
+        }
+        else {
+            int frontHalf = (rows / 2) * seats * normalPrice;
+            int backHalf = (rows - rows / 2) * seats * reducedPrice; // Update here
+            return frontHalf + backHalf;
+        }
+    }
+}
